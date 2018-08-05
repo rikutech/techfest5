@@ -1,4 +1,3 @@
-= ```review
 = はじめてのRe:VIEW
 
 //lead{
@@ -23,4 +22,3 @@
  3. Download from GitHub
 
 ホームページは@<tt>{https://reviewml.org/}です。
-```

@@ -1,7 +1,8 @@
 PREDEF:
 
 CHAPS:
-  - rails_elixir.re
+  - ch01.re
+  - ch02.re
 
 APPENDIX:
 
