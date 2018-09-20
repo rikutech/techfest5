@@ -24,7 +24,7 @@ body {
 }
 p, ul, ol, dl, pre, table {
     font-family: "ShinGo Regular","ShinGo R","新ゴR","新ゴ R", sans-serif;
-    font-size: 0.75em;
+    font-size: 0.625em;
 }
 /* Heading */
 h1 {
