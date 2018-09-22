@@ -2,7 +2,7 @@
 
 はじめまして、LIDDELL Inc.でリードエンジニア(自称)をしている今(コン)といいます。
 
-一応iOSチームのリーダーなんですが、あまりカッチリした境界があるわけではないのでVue.js、Rails、Laravelらへんを触ったりアレやコレやを節操なくワチャワチャしてます。エセフルスタックです。
+一応iOSチームのリーダーなんですが、あまりカッチリした境界があるわけではないのでVue.js、Rails、Laravelらへんも触ったりアレやコレやを節操なくワチャワチャしてます。エセフルスタックです。
 
 
 さて、私からは最近個人的にお熱なElixir製Webフレームワーク「Phoenix」についてお話したいと思います。
@@ -10,6 +10,7 @@
 
 「Modelが抱える責務が多すぎる…」「大量のテストコードにはもうウンザリ…」「色々な課題を解決するためにクラス構成拡張しまくったけどこれもうRailsじゃなくてよくね？」
 あるあるですね。Railsというフレームワークはミニマムであまりスケール予定のないアプリケーションをサクッと作るには良いのですが、スケーラビリティという面ではいささか頼りない部分があります。
+
 そこで奥さん、Phoenixですよ。
 PhoenixはRailsに影響を受けつつも現代風に進化しているので、Railsのつらみを色々と解決してくれています。
 
@@ -95,7 +96,7 @@ Rubyだったら以下のように書くでしょうか。
 //}
 
 書き方としては、Rubyのほうがスッキリしているような印象を受けるかもしれませんね。
-しかし、オブジェクト指向における「obj.method(arg)」の実態が「method(self, arg)」であることを考えるとElixirの書き方はプログラムの実態に即していると言えないでしょうか。
+しかし、オブジェクト指向における「obj.method(arg)」の実態が「method(self, arg)」でしかないことを考えるとElixirの書き方はプログラムの実態に即していると言えないでしょうか。
 
 Elixirの基本的な文法については以上です。
 それでは、RailsとPhoenixの比較に入りましょう。
@@ -103,7 +104,7 @@ Elixirの基本的な文法については以上です。
 == Railsのここがつらいよ！ & Phoenixならこうできるよ！
 
 Railsは既に14年の歴史があるWebフレームワークです。
-Convention over Configuration(設定より規約)を掲げ、圧倒的に自由な記述ができるRubyに、Web開発のレール(規約)を敷き、典型的なCRUDアプリケーションを高速開発できる、当時からしたら画期的なフレームワークでした。
+Convention over Configuration(設定より規約)を掲げ、圧倒的に自由な記述ができるRubyにWeb開発のレール(規約)を敷き典型的なCRUDアプリケーションを高速開発できる、当時からしたら画期的なフレームワークでした。
 Rubyの今日の地位は、Railsによるものと言っても過言ではないでしょう。
 
 しかし、この十数年でWebの世界はより繁栄し、複雑化や多様化が進んできました。
@@ -149,10 +150,75 @@ priv/repo/migrations/20180922061853_create_users.exs
 
 appとapp_webという二種類のディレクトリがあることにお気づきでしょうか。
 Phoenixではビジネスロジック部とwebアプリケーション部を明確に切り離しています。
-「webの仕組みってあくまでインターフェースで、重要なのはアプリケーション固有のビジネスロジックのほうだよね」という考えは普遍的なものであはありますが、ディレクトリ構成レベルでそれが実現されているのは気持ちのいいものがあります。
+「webの仕組みってあくまでインターフェースで、重要なのはアプリケーション固有のビジネスロジックのほうだよね」という考えは普遍的なものではありますが、ディレクトリ構成レベルでそれが実現されているのは気持ちのいいものがあります。
 
-//$再確認
-//ベース
-//
-//view・presenter
-//テスト
+user.exファイルから見ていきましょう。
+
+//list[7][user.ex][elixir]{
+defmodule Rumbl.Accounts.User do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  schema "users" do
+    field :age, :integer
+    field :name, :string
+
+    timestamps()
+  end
+
+  def changeset(user, attrs) do
+    user
+    |> cast(attrs, [:name, :age])
+    |> validate_required([:name, :age])
+  end
+end
+//}
+
+Ectoというデータマッピングとクエリを扱えるライブラリを利用しています。
+Ectoのschema関数を用いてdoブロック内でスキーマを定義しています。
+Phoenixではコンテキストごとにスキーマを定義できるので、あるコンテキストからは不要なカラムを隠したり、意味合いが変わってくるカラムの名前を変更したりできます。イケイケですね。
+schema関数の実態はマクロで、受け取ったfield情報を元にこのmodule内にuser構造体を定義してくれます。
+ActiveRecordが内部でメタプログラミングを用いてメソッド定義しているのに近いですね。
+ただEctoのほうが明示的で必要最小限であるところが私は気に入っています。
+
+changeset関数はuser構造体とattributesを受け取り、validateされた新しいuser構造体を返します。
+
+スキーマはこれだけです。次は集約であるaccounts.exファイルを見てみましょう。
+
+//list[8][accounts.ex][elixir]{
+defmodule Rumbl.Accounts do
+  import Ecto.Query, warn: false
+  alias Rumbl.Repo
+
+  alias Rumbl.Accounts.User
+
+  def list_users do
+    Repo.all(User)
+  end
+
+  def get_user!(id), do: Repo.get!(User, id)
+
+  def create_user(attrs \\ %{}) do
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_user(%User{} = user) do
+    Repo.delete(user)
+  end
+
+  def change_user(%User{} = user) do
+    User.changeset(user, %{})
+  end
+end
+//}
+
+view・presenter
+テスト
