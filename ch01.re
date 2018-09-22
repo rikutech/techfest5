@@ -124,13 +124,34 @@ ActiveRecordを使うと、必然的にModelとテーブルが1対1になりま�
 
 さぁ、Phoenixに話を戻しましょう。
 PhoenixではContextという概念を採用しています。
-ドメイン駆動設計を知っている方はContextという言葉に馴染みがあるでしょうが、ここで言うContextは、ドメイン駆動設計で言うところのContextとは別物であることに注意してください。
-カタログと注文のシステムを分けるためのシステムというより、注文のマスタデータと、それに紐づく商品データや決済データをまとめ上げて1つの注文情報という形で取り扱うような、集約に近いものになります。
+ドメイン駆動設計を知っている方はContextという言葉に馴染みがあるでしょうが、ここで言うContextは、DDDで言うところのContextとは別物であることに注意してください。
+カタログと購入のシステムを分けるための仕組みというより、注文のデータと、それに紐づく商品データや決済データといったスキーマをまとめ上げて「購入」という形で取り扱うような、集約に近いものになります。
 
-文章で説明するより実際のコードを見ていきましょう。
-Scaffoldのように自動生成
+文章だけで説明するより実際のコードを見ていきましょうか。
+RailsのScaffoldのようなコマンドでAccount Contextとそれに紐づくUser Schemaを自動生成してみます。
 
-//流れを再確認
+//list[6][console][]{
+$ mix phx.gen.html Accounts User users name:string age:integer
+//以下のファイルが生成されます
+lib/app/accounts/user.ex
+lib/app/accounts/accounts.ex
+lib/app_web/controllers/user_controller.ex
+lib/app_web/templates/user/edit.html.eex
+lib/app_web/templates/user/form.html.eex
+lib/app_web/templates/user/index.html.eex
+lib/app_web/templates/user/new.html.eex
+lib/app_web/templates/user/show.html.eex
+lib/app_web/views/user_view.ex
+test/app_web/controllers/user_controller_test.exs
+test/app/accounts/accounts_test.exs
+priv/repo/migrations/20180922061853_create_users.exs
+//}
+
+appとapp_webという二種類のディレクトリがあることにお気づきでしょうか。
+Phoenixではビジネスロジック部とwebアプリケーション部を明確に切り離しています。
+「webの仕組みってあくまでインターフェースで、重要なのはアプリケーション固有のビジネスロジックのほうだよね」という考えは普遍的なものであはありますが、ディレクトリ構成レベルでそれが実現されているのは気持ちのいいものがあります。
+
+//$再確認
 //ベース
 //
 //view・presenter
