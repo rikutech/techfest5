@@ -155,7 +155,7 @@ Phoenixではビジネスロジック部とwebアプリケーション部を明�
 user.exファイルから見ていきましょう。
 
 //list[7][user.ex][elixir]{
-defmodule Rumbl.Accounts.User do
+defmodule App.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -181,16 +181,16 @@ schema関数の実態はマクロで、受け取ったfield情報を元にこの
 ActiveRecordが内部でメタプログラミングを用いてメソッド定義しているのに近いですね。
 ただEctoのほうが明示的で必要最小限であるところが私は気に入っています。
 
-changeset関数はuser構造体とattributesを受け取り、validateされた新しいuser構造体を返します。
+changeset関数はuser構造体とattributesを受け取りvalidateし、changeset(新規作成もしくは更新のための差分)構造体を返します。
 
 スキーマはこれだけです。次は集約であるaccounts.exファイルを見てみましょう。
 
 //list[8][accounts.ex][elixir]{
-defmodule Rumbl.Accounts do
+defmodule App.Accounts do
   import Ecto.Query, warn: false
-  alias Rumbl.Repo
+  alias App.Repo
 
-  alias Rumbl.Accounts.User
+  alias App.Accounts.User
 
   def list_users do
     Repo.all(User)
@@ -219,6 +219,13 @@ defmodule Rumbl.Accounts do
   end
 end
 //}
+
+これだとCRUDだけのシンプルなものなので、Phoenixの利点は分かりづらいかもしれません。しかし、後々スキーマが増え、スキーマ同士のリレーションを考える必要が出てくるWebサービスでは複数のスキーマ(テーブル)が関連を持つことを考える
+
+TODO:このへんあとで書く
+
+クエリはすべてApp.Repoを通して実行されます。App.RepoについてはEcto.Repoの単純なラッパーなので割愛します。
+
 
 view・presenter
 テスト
