@@ -98,9 +98,9 @@ Rubyだったら以下のように書くでしょうか。
 しかし、オブジェクト指向における「obj.method(arg)」の実態が「method(self, arg)」でしかないことを考えるとElixirの書き方はプログラムの実態に即していると言えないでしょうか。
 
 Elixirの基本的な文法については以上です。
-それでは、RailsとPhoenixの比較に入りましょう。
+それでは、いよいよPhoenixの素晴らしさに迫っていきましょう。
 
-== Railsのここがつらいよ！ & Phoenixならこうできるよ！
+== 不死鳥の名に恥じない出来栄え、Phoenix
 
 Railsは既に14年の歴史があるWebフレームワークです。
 Convention over Configuration(設定より規約)を掲げ、圧倒的に自由な記述ができるRubyにWeb開発のレール(規約)を敷き典型的なCRUDアプリケーションを高速開発できる、当時からしたら画期的なフレームワークでした。
@@ -363,6 +363,25 @@ defmodule HelloWeb.UserView do
 end
 //}
 
+Controllerで呼び出していたrender関数の実態はPhoenixの奥深くにあるんですが、最終的にこのUserViewのrender関数が呼び出されます。
+RailsであればDraperなどのGemを使って実装する、いわゆるDecorator的な処理はここに書くことができます。
+//list[12][user_view.ex][elixir]{
+  def render("user.json", %{user: user}) do
+    %{id: user.id,
+      name: user.name,
+      age: user.age,
+      age_with_label: age_with_label(user.age)}
+  end
+
+  defp age_with_label(age) do
+    Integer.to_string(age) <> " years old"
+  end
+//}
+リソース単位でview加工のためのmoduleがいるのはいいですね。
+更にElixirにおいてはdecorationというよりただのデータの加工でしかないので委譲など面倒くさいことを考えずに済んで大変気持ちが良いです。
+
+長くなりましたが、以上がPhoenixの一連のリクエスト処理の流れでした。
+かなり理にかなった設計になっていることが分かっていただけたのではないでしょうか。
 
 === Phoenixのイケてるところ③: リアルタイムWebも任せろ
 近年、リアルタイムなチャット機能やユーザー同士のリアクションの送受信など、リアルタイムWebが求められる場面が増えているかと思います。
@@ -377,3 +396,4 @@ PhoenixのWebsocket実装であるChannelsそのものとActionCableの良いベ
 もう(Channels使うしか)ないじゃん…
 
 === Phoenixのイケてるところ④: 圧倒的テスタビリティ
+
