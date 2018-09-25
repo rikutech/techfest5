@@ -263,8 +263,8 @@ ActiveRecordを使うと、必然的にModelとテーブルが1対1になりま�
 更には、scopeやcallback、validationもModel内に書けてしまうため、何も考えずに処理を書いていくとすぐにFatModelになってしまいます。後からリファクタリングしようと思っても、オブジェクト指向ゆえの複雑な状態が邪魔をして中々難しいものがあります。南無三。
 
 さぁ、Phoenixに話を戻しましょう。
-PhoenixではContextという概念を採用しています。
-ドメイン駆動設計を知っている方はContextという言葉に馴染みがあるでしょうが、ここで言うContextは、DDDで言うところのContextとは別物であることに注意してください。
+Phoenixは元々Railsに近いModel構造を採用していましたが、version1.3からはContextという概念を採用しています。
+ドメイン駆動設計を知っている方はContextという言葉に馴染みがあると思いますが、ここで言うContextは、DDDで言うところのContextとは別物であることに注意してください。
 カタログと購入のシステムを分けるための仕組みというより、注文のデータと、それに紐づく商品データや決済データといったスキーマをまとめ上げて「購入」という形で取り扱うような、集約に近いものになります。
 ここではAccounts.exがContext、user.exがスキーマになります。
 
@@ -295,7 +295,7 @@ Ectoのschema関数を用いてdoブロック内でスキーマを定義して�
 Phoenixではコンテキストごとにスキーマを定義できるので、あるコンテキストからは不要なカラムを隠したり、意味合いが変わってくるカラムの名前を変更したりできます。イケイケですね。
 schema関数の実態はマクロで、受け取ったfield情報を元にこのmodule内にuser構造体を定義してくれます。
 ActiveRecordが内部でメタプログラミングを用いてメソッド定義しているのに近いですね。
-ただEctoのほうが明示的で必要最小限であるところが私は気に入っています。
+ただEctoのほうが明示的で必要最小限の機能だけを提供してくれるところが私は気に入っています。
 
 changeset関数はuser構造体とattributesを受け取りvalidateし、changeset(新規作成もしくは更新のための差分)構造体を返します。
 
@@ -336,14 +336,32 @@ defmodule App.Accounts do
 end
 //}
 
-これだとCRUDだけのシンプルなものなので、Phoenixの利点は分かりづらいかもしれません。しかし、後々スキーマが増え、スキーマ同士のリレーションを考える必要が出てくるWebサービスでは複数のスキーマ(テーブル)が関連を持つことを考える
+これだとCRUDだけのシンプルなものなので、Phoenixの利点は分かりづらいかもしれません。しかし、サービスを作れば必ずといっていいほど複数のスキーマ(テーブル)が関連を持つことになるので、最初からこの構造なのは嬉しいところ。
+まぁ元も子もないこと言っちゃえばこの辺の構造は自分で好きにカスタマイズできるんですけどね。
+一定の関数群にまとまった名前をつけてmoduleにしてしまうだけで切り出せるので。状態に依存しない関数型言語だからこそできることです。関数を分割したり纏めたり切り出したりする類のリファクタリングが非常に容易なので色々試行錯誤しやすいです。
 
-TODO:このへんあとで書く
+さぁ、controllerを通してmodelを取得し、あとはviewを生成するだけです。user_view.exを見ていきましょう。
 
-クエリはすべてApp.Repoを通して実行されます。App.RepoについてはEcto.Repoの単純なラッパーなので割愛します。
+//list[11][user_view.ex][elixir]{
+defmodule HelloWeb.UserView do
+  use HelloWeb, :view
+  alias HelloWeb.UserView
 
+  def render("index.json", %{users: users}) do
+    %{data: render_many(users, UserView, "user.json")}
+  end
 
-view・presenter
+  def render("show.json", %{user: user}) do
+    %{data: render_one(user, UserView, "user.json")}
+  end
+
+  def render("user.json", %{user: user}) do
+    %{id: user.id,
+      name: user.name,
+      age: user.age}
+  end
+end
+//}
 
 
 === Phoenixのイケてるところ③: リアルタイムWebも任せろ
@@ -357,6 +375,5 @@ ActionCableは1000接続の時点で既に少々怪しく、10000接続にもな
 PhoenixのWebsocket実装であるChannelsそのものとActionCableの良いベンチマーク比較が見つからなかったためErlang VMとの比較になってしまっていますが、ChannelsはErlang VM以外に依存していないので実際のパフォーマンスと大きく乖離していることはないでしょう。
 なおかつChannelsの利用しやすさはActionCableと大差ありません。
 もう(Channels使うしか)ないじゃん…
-
 
 === Phoenixのイケてるところ④: 圧倒的テスタビリティ
