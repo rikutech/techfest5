@@ -400,20 +400,49 @@ PhoenixのWebsocket実装であるChannelsそのものとActionCableの良いベ
 よって、他オブジェクトへのメッセージパッシングが適切かテストするためにMockを作って、なんてことはしなくていいのです。
 ただ正常系・異常系に従った引数を渡してassertしてやるだけです。
 Elixirでは環境ごとの実装の差し替えも簡単に行えます。
-実質標準の方法が、差し替えたいモジュールを使用したい箇所でモジュール変数にして、envに応じて注入するだけです。
+差し替えたいモジュールを使用したい箇所でモジュール変数にして、envに応じて注入するだけです。
 
-//list[13][user_view.ex][elixir]{
-  def render("user.json", %{user: user}) do
-    %{id: user.id,
-      name: user.name,
-      age: user.age,
-      age_with_label: age_with_label(user.age)}
+//list[13][main.ex][elixir]{
+defmodule ClientForTest do
+  def request do
+    IO.puts "オンメモリから結果を返します"
+    {:ok, {:result, 200}}
   end
+end
 
-  defp age_with_label(age) do
-    Integer.to_string(age) <> " years old"
+defmodule ClientForProd do
+  def request do
+    IO.puts "APIサーバーにリクエストします"
+    {:ok, {:result, 200}}
   end
+end
+
+defmodule Main do
+  @client Application.get_env(:app, :client)
+
+  def main do
+    IO.inspect @client.request
+  end
+end
+
+
+$ MIX_ENV=test mix compile
+$ iex -S mix
+iex(1)> Main.main
+オンメモリから結果を返します
+{:ok, {:result, 200}}
+{:ok, {:result, 200}}
+
+$ MIX_ENV=prod mix compile
+$ iex -S mix
+iex(1)> Main.main
+APIサーバーにリクエストします
+{:ok, {:result, 200}}
+{:ok, {:result, 200}}
 //}
+
+うーむ、簡潔かつ明示的で唸らされます。
+ここでは省略していますが、インターフェースが定義できるビヘイビア(振る舞い)という機能もあるので、こういった差し替え可能モジュールを実装するときにはほぼマストで使います。
 
 == おわりに
 Elixirという言語、そしてPhoenixというフレームワークの強力さが伝わったでしょうか。
@@ -426,5 +455,5 @@ Elixirという言語、そしてPhoenixというフレームワークの強力�
 Elixirは今のところ日本語の書籍が殆ど出ていないので、ある程度の英語力が求められてきます。
 ただ、近年のライブラリや導入企業の増加数には目を見張るものがあるので、時間の問題だろうとは思っています。
 
-何が言いたいかって、つまりはElixir最高なのでやりましょう。是非。ここまで読んだ貴方ならやってくれると信じています。
-楽しいElixirライフを！
+何が言いたいかというと、つまりはElixir最高なのでやりましょう、是非。ここまで読んだ貴方ならやってくれると信じています。
+Happy Hacking!
